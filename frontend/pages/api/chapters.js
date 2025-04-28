@@ -21,7 +21,7 @@ export default async (req, res) => {
 
                 let chapters = await axios.get(`${process.env.BACKEND_URL}/api/v1/chapters/story?id=${storyId}`)
 
-                const filteredChapters = chapters.data.chapters.filter(x => x.mode === "Public" || (session.user.id === story.data.user_id))
+                const filteredChapters = chapters.data.chapters.filter(x => x.mode === "Public" || (session && session.user.id === story.data.user_id))
 
                 return res.status(200).json({
                     chapters: filteredChapters,
@@ -73,7 +73,7 @@ export default async (req, res) => {
                 let story = await axios.get(`${process.env.BACKEND_URL}/api/v1/stories/id/${JSON.parse(storyID[0])}`)
 
                 if (story.data){
-                    if (story.data.user_id !== session.user.id){
+                    if (!session || story.data.user_id !== session.user.id){
                         return res.status(401).json({ message: "Unauthorized" });
                     }
 
@@ -98,7 +98,7 @@ export default async (req, res) => {
             let story = await axios.get(`${process.env.BACKEND_URL}/api/v1/stories/id/${JSON.parse(storyID[0])}`)
 
             if (story.data) {
-                if (story.data.user_id !== session.user.id) {
+                if (!session || story.data.user_id !== session.user.id) {
                     return res.status(401).json({message: "Unauthorized"});
                 }
                 const response = await axios.delete(`${process.env.BACKEND_URL}/api/v1/chapters?storyID=${storyID}&chapterID=${chapterID}`)

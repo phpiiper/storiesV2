@@ -11,8 +11,6 @@ export default function SignInForm({open=false}) {
     const [error, setError] = useState("");
 
     async function signUpFunction() {
-        console.log("disabled for now")
-        return
         let user = document.getElementById("sign-in-username").value;
         let pw = document.getElementById("sign-in-password").value;
         console.log(user,pw)

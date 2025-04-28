@@ -17,8 +17,11 @@ export default NextAuth({
                 if (!credentials?.user || !credentials?.password) {
                     throw new Error("Missing credentials");
                 }
+                const auth = {Authorization: `Bearer ${process.env.AUTH_TOKEN}`}
 
-                const users = await axios.get(`${process.env.BACKEND_URL}/api/v1/users`);
+                const users = await axios.get(`${process.env.BACKEND_URL}/api/v1/users`,{
+                    headers: auth
+                });
                 const user = users.data.find(user => user.username === credentials.user);
 
                 if (!user) {

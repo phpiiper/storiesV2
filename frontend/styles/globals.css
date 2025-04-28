@@ -175,6 +175,9 @@ a:hover {
  .story-div .body {
     height: 50px;
     border-left: 2px solid black; padding: 0.5rem 1rem;
+     overflow: hidden;
+     -webkit-line-clamp: 2;
+     line-clamp: 2;
  }
  .story-div .bottom {
     display: flex; gap: 1rem; align-items: center;
@@ -289,6 +292,10 @@ a:hover {
 }
 .edit-story-description {
     border-left: 2px solid black; padding: 0.15rem 0.5rem 0.15rem 0.25rem;
+    overflow: hidden;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    height: 4.5rem;
 }
 
 

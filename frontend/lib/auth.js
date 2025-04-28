@@ -17,8 +17,11 @@ export const authOptions = {
                 }
 
                 try {
+                    const auth = {Authorization: `Bearer ${process.env.AUTH_TOKEN}`}
                     // Query user by username
-                    const result = await axios.get(`${process.env.BACKEND_URL}/api/v1/users`);
+                    const result = await axios.get(`${process.env.BACKEND_URL}/api/v1/users`,{
+                        headers: auth
+                    });
                     const user = result.data.find(user => user.username === credentials.user);
 
                     if (!user) {

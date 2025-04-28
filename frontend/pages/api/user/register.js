@@ -6,6 +6,7 @@ export default async (req, res) => {
     try {
         if (req.body) {
             const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+            const auth = {Authorization: `Bearer ${process.env.AUTH_TOKEN}`}
 
             if (req.method === "POST") {
                 if (body.username.length < 5){
@@ -18,35 +19,25 @@ export default async (req, res) => {
                         message: "Password must be longer than 5 characters!"
                     });
                 }
-                if (EmailValidator.validate(body.email) === false){
-                    return res.status(400).json({
-                        message: "Email is invalid!"
-                    })
-                }
 
-                const users = await axios.get(`${process.env.BACKEND_URL}/api/v1/users`)
+                const users = await axios.get(`${process.env.BACKEND_URL}/api/v1/users`,{
+                    headers: auth
+                })
                 const user_exists = users.data.filter(user => user.username === body.username)
                 if (user_exists.length === 1){
                     return res.status(400).json({
                         message: "Username is taken!"
                     });
                 }
-                const email_exists = users.data.filter(user => user.email === body.email)
-                if (email_exists.length === 1){
-                    return res.status(400).json({
-                        message: "Email is taken!"
-                    })
-                }
                 // ELSE: create an account
                 const salt = await bcrypt.genSalt(10);
                 const username = body.username;
                 const password = await bcrypt.hash(body.password,salt)
-                const email = body.email;
 
                 // postgresql add user (Axios)
                 const response = await axios.post(`${process.env.BACKEND_URL}/api/v1/users`, {
-                        username, password, email
-                })
+                        username, password
+                },{ headers: auth })
 
                 return res.status(200).json({
                     message: 'Data inserted successfully',

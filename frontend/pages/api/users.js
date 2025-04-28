@@ -1,24 +1,29 @@
 import axios from "axios";
 export default async (req, res) => {
     try {
+        const auth = {Authorization: `Bearer ${process.env.AUTH_TOKEN}`}
         if (req.method === "GET"){
             const { id, username, text} = req.query;
             if (id || username){
                 let user;
                 if (id){
-                    user = await axios.get(`${process.env.BACKEND_URL}/api/v1/users/id/${id}`)
+                    user = await axios.get(`${process.env.BACKEND_URL}/api/v1/users/id/${id}`,{
+                    headers: auth
+                })
                 } else { // username
-                    user = await axios.get(`${process.env.BACKEND_URL}/api/v1/users/username/${id}`)
+                    user = await axios.get(`${process.env.BACKEND_URL}/api/v1/users/username/${id}`,{
+                    headers: auth
+                })
                 }
                 return res.status(200).json({
                     user: user.data
                 })
             }
             if (text){
-                let chapter = await axios.get(`${process.env.BACKEND_URL}/api/v1/chapters/id/${chapterId}`)
+                let users = await axios.get(`${process.env.BACKEND_URL}/api/v1/users/username/${text}`)
 
                 return res.status(200).json({
-                    chapter: chapter.data,
+                    users: users.data,
                 })
 
             }

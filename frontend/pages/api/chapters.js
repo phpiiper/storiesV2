@@ -13,13 +13,18 @@ export const config = {
 
 export default async (req, res) => {
     const { storyId, chapterId, fileName} = req.query;
-    const session = await getServerSession(req, res, authOptions)
     try {
+        const session = await getServerSession(req, res, authOptions)
+        const auth = {Authorization: `Bearer ${process.env.AUTH_TOKEN}`}
         if (req.method === "GET"){
             if (storyId){
-                const story = await axios.get(`${process.env.BACKEND_URL}/api/v1/stories/id/${storyId}`);
+                const story = await axios.get(`${process.env.BACKEND_URL}/api/v1/stories/id/${storyId}`,{
+                    headers: auth
+                });
 
-                let chapters = await axios.get(`${process.env.BACKEND_URL}/api/v1/chapters/story?id=${storyId}`)
+                let chapters = await axios.get(`${process.env.BACKEND_URL}/api/v1/chapters/story?id=${storyId}`,{
+                    headers: auth
+                })
 
                 const filteredChapters = chapters.data.chapters.filter(x => x.mode === "Public" || (session && session.user.id === story.data.user_id))
 
@@ -29,7 +34,9 @@ export default async (req, res) => {
                 })
             }
             if (chapterId){
-                let chapter = await axios.get(`${process.env.BACKEND_URL}/api/v1/chapters/id/${chapterId}`)
+                let chapter = await axios.get(`${process.env.BACKEND_URL}/api/v1/chapters/id/${chapterId}`,{
+                    headers: auth
+                })
 
                 return res.status(200).json({
                     chapter: chapter.data,
@@ -37,7 +44,9 @@ export default async (req, res) => {
 
             }
             if (fileName){
-                let file = await axios.get(`${process.env.BACKEND_URL}/api/v1/chapters/file/${fileName}`)
+                let file = await axios.get(`${process.env.BACKEND_URL}/api/v1/chapters/file/${fileName}`,{
+                    headers: auth
+                })
                 if (!file) {
                     return res.status(404).json({ message: "File not found" });
                 }
@@ -78,12 +87,16 @@ export default async (req, res) => {
                     }
 
                     if (req.method === "POST"){
-                        const chapter = await axios.post(`${process.env.BACKEND_URL}/api/v1/chapters`,newFormData)
+                        const chapter = await axios.post(`${process.env.BACKEND_URL}/api/v1/chapters`,newFormData,{
+                    headers: auth
+                })
                         const returnData = chapter.data;
                         res.status(200).json({returnData})
                     }
                     if (req.method === "PUT"){
-                        const chapter = await axios.put(`${process.env.BACKEND_URL}/api/v1/chapters`,newFormData)
+                        const chapter = await axios.put(`${process.env.BACKEND_URL}/api/v1/chapters`,newFormData,{
+                    headers: auth
+                })
                         const returnData = chapter.data;
                         res.status(200).json({returnData})
                     }
@@ -95,13 +108,17 @@ export default async (req, res) => {
         }
         if (req.method === "DELETE"){
             const {storyID, chapterID} = req.query;
-            let story = await axios.get(`${process.env.BACKEND_URL}/api/v1/stories/id/${JSON.parse(storyID[0])}`)
+            let story = await axios.get(`${process.env.BACKEND_URL}/api/v1/stories/id/${JSON.parse(storyID[0])}`,{
+                    headers: auth
+                })
 
             if (story.data) {
                 if (!session || story.data.user_id !== session.user.id) {
                     return res.status(401).json({message: "Unauthorized"});
                 }
-                const response = await axios.delete(`${process.env.BACKEND_URL}/api/v1/chapters?storyID=${storyID}&chapterID=${chapterID}`)
+                const response = await axios.delete(`${process.env.BACKEND_URL}/api/v1/chapters?storyID=${storyID}&chapterID=${chapterID}`,{
+                    headers: auth
+                })
                 return res.status(200).json({
                     response: response.data, status: response.data.status,
                 })

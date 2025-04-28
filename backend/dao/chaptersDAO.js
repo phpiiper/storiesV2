@@ -63,60 +63,81 @@ export default class ChaptersDAO {
         }
     }
 
-    static async updateChapter(storyId, file, chapterId, chapterName, chapterMode){
+    static async updateChapter(storyId, fileUrl, chapterId, chapterName, chapterMode){
         // UPDATE DB
         let res = await query("UPDATE chapters SET name = $1, mode = $2, last_updated = current_timestamp WHERE id=$3", [chapterName, chapterMode, chapterId])
+        const fileName = `${chapterId}.md`;
         // Upload File into Azure
-        const fileURL = `${chapterId}.md`
-        const url = process.env.AZURE_STORAGE_URL + `/chapters/${fileURL}?${process.env.AZURE_BLOB_SAS_TOKEN}`
-        const readFile = await fs.readFile(file.path)
+        // FETCH the file contents from fileUrl
+        const fileResponse = await axios.get(fileUrl, {
+            responseType: 'arraybuffer'
+        });
 
-        const response = await axios.put(url, readFile, {
+        const fileBuffer = fileResponse.data;
+
+        // UPLOAD to Azure Blob Storage
+        const azureUrl = `${process.env.AZURE_STORAGE_URL}/chapters/${fileName}?${process.env.AZURE_BLOB_SAS_TOKEN}`;
+
+        const uploadResponse = await axios.put(azureUrl, fileBuffer, {
             headers: {
                 'x-ms-blob-type': 'BlockBlob',
-                'Content-Type': file.mimetype || 'application/octet-stream'
+                'Content-Type': fileResponse.headers['content-type'] || 'application/octet-stream'
             }
         });
 
         return {
-            chapter: response.data,
-            status: ["UPDATE",response.status],
-            postgres: res
-        }
-
-    }
-
-
-    static async postChapter(storyId, file, chapterName, chapterMode) {
-    try {
-        // INSERT into DB (w/o filePath)
-        let res = await query("INSERT INTO chapters (name, file, mode, story_id, create_date, last_updated) VALUES ($1, $2, $3, $4, current_timestamp, current_timestamp) RETURNING id",[chapterName,null,chapterMode,storyId])
-        // GET FILE PATH AFTERWARD and UPDATE IT
-        const chapterID = res.rows[0].id;
-        const fileURL = `${chapterID}.md`
-        await query("UPDATE chapters SET file = $1 WHERE id=$2",[fileURL,chapterID])
-        // UPLOAD TO AZURE
-        const url = process.env.AZURE_STORAGE_URL + `/chapters/${fileURL}?${process.env.AZURE_BLOB_SAS_TOKEN}`
-        const readFile = await fs.readFile(file.path)
-        const response = await axios.put(url, readFile, {
-            headers: {
-                'x-ms-blob-type': 'BlockBlob',
-                'Content-Type': file.mimetype || 'application/octet-stream'
-            }
-        });
-        return {
-            chapter: response.data,
-            status: ["CREATE",response.status],
-            headers: response.headers,
+            chapter: uploadResponse.data,
+            status: ["CREATE", uploadResponse.status],
+            headers: uploadResponse.headers,
             postgres: res,
+        };
+
+    }
+
+    static async postChapter(storyId, fileUrl, chapterName, chapterMode) {
+        try {
+            // INSERT into DB (initial insert without filePath)
+            let res = await query(
+                "INSERT INTO chapters (name, file, mode, story_id, create_date, last_updated) VALUES ($1, $2, $3, $4, current_timestamp, current_timestamp) RETURNING id",
+                [chapterName, null, chapterMode, storyId]
+            );
+
+            const chapterID = res.rows[0].id;
+            const fileName = `${chapterID}.md`;
+
+            // UPDATE the chapter row with the file name
+            await query("UPDATE chapters SET file = $1 WHERE id = $2", [fileName, chapterID]);
+
+            // FETCH the file contents from fileUrl
+            const fileResponse = await axios.get(fileUrl, {
+                responseType: 'arraybuffer'
+            });
+
+            const fileBuffer = fileResponse.data;
+
+            // UPLOAD to Azure Blob Storage
+            const azureUrl = `${process.env.AZURE_STORAGE_URL}/chapters/${fileName}?${process.env.AZURE_BLOB_SAS_TOKEN}`;
+
+            const uploadResponse = await axios.put(azureUrl, fileBuffer, {
+                headers: {
+                    'x-ms-blob-type': 'BlockBlob',
+                    'Content-Type': fileResponse.headers['content-type'] || 'application/octet-stream'
+                }
+            });
+
+            return {
+                chapter: uploadResponse.data,
+                status: ["CREATE", uploadResponse.status],
+                headers: uploadResponse.headers,
+                postgres: res,
+            };
+
+        } catch (e) {
+            console.error(`something went wrong in postChapter: ${e}`);
+            throw e;
         }
-
-    }  catch(e) {
-        console.error(`something went wrong in postChapter: ${e}`)
-        throw e
     }
 
-    }
 
     static async deleteChapterById(id) {
         try {

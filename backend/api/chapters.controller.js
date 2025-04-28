@@ -48,14 +48,10 @@ export default class ChaptersController {
 
     static async apiPostChapter(req, res, next){
         try {
-            const {storyId, chapterName, chapterMode} = req.body;
-            const file = req.file;
-            if (!file) {
-                console.error("no file")
-                res.status(408).json({error: "no file"})
-                console.log(req.headers)
-            }
-            let {chapter, status, postgres} = await ChaptersDAO.postChapter(storyId, file, chapterName, chapterMode)
+            const {storyId, chapterName, chapterMode, fileUrl} = req.body;
+
+            let {chapter, status, postgres} = await ChaptersDAO.postChapter(storyId, fileUrl, chapterName, chapterMode)
+            //
             res.json({
                 chapter, status, postgres
             })
@@ -67,20 +63,15 @@ export default class ChaptersController {
 
     static async apiUpdateChapter(req, res, next){
         try {
-            const {storyId, chapterId, chapterName, chapterMode} = req.body;
-            const file = req.file;
-            if (!file) {
-                console.error("no file")
-                res.status(408).json({error: "no file"})
-                console.log(req.headers)
-            }
+            const {storyId, chapterName, chapterId, chapterMode, fileUrl} = req.body;
 
-            let {chapter, status} = await ChaptersDAO.updateChapter(storyId, file, chapterId, chapterName, chapterMode)
+            let {chapter, status, postgres} = await ChaptersDAO.updateChapter(storyId, fileUrl, chapterId, chapterName, chapterMode)
+            //
             res.json({
-                chapter, status
+                chapter, status, postgres
             })
         } catch(e) {
-        console.log(`apiUpdateChapter api, ${e}`)
+            console.log(`apiUpdateChapter, ${e}`)
             res.status(500).json({error: e, })
         }
     }

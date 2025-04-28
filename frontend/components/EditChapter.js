@@ -1,11 +1,9 @@
 import Button from "@mui/material/Button";
 import {useEffect, useState} from "react";
 import axios from "axios";
-import TextField from "@mui/material/TextField";
 
-export default function EditChapter({funcs, setChapters, chapters, chapterID}) {
+export default function EditChapter({funcs, chapters, chapterID}) {
     const ch = chapters.find(x => x.id === chapterID)
-    const [openEditor, setEditor] = useState(false)
     const [chapterFileText, setChapterFileText] = useState("")
 
     useEffect(() => {

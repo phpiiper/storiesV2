@@ -1,5 +1,8 @@
-import { useRouter } from 'next/router';
+import HomeBar from "@/components/HomeBar";
 
 export default function StoryPlaceholder() {
-    return <h1>Stories</h1>;
+    return (<><HomeBar />
+    <h1>Stories</h1>
+    <p>Will be made soon</p>
+    </>);
 }

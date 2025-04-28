@@ -1,5 +1,4 @@
 import Chip from '@mui/material/Chip';
-import HomeBar from "@/components/HomeBar";
 
 export default function Story({story}) {
     if (!story){

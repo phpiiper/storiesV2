@@ -1,8 +1,7 @@
 import { useRouter } from 'next/router';
-import {useEffect, useState, useRef} from "react";
+import {useEffect, useState } from "react";
 import axios from "axios";
 import HomeBar from "@/components/HomeBar";
-import Markdown from 'react-markdown'
 import {useSession} from "next-auth/react";
 import Head from "next/head";
 import Tabs from '@mui/material/Tabs';
@@ -102,7 +101,7 @@ export default function StoryEditor() {
                 <title>Edit Story</title>
             </Head>
             <div>
-                <span>[NOT AUTHENTICATED]</span>
+                <span>NOT AUTHENTICATED</span>
             </div>
         </>)
     }
@@ -182,7 +181,7 @@ export default function StoryEditor() {
                             onClick={(event) => {addStoryTag(event)}}
                         >ADD</Button>
                     </div>
-                    <p>Add tags to better define the story. Only alphabetical characters (a-z) and hyphen (-) are allowed.</p>
+                    <p>Add tags to better define the story. Only alphabetical characters and hyphens are allowed.</p>
                     <span className={"text-header"}>Tag List</span>
                     <div className={"tags-list"}>
                         {story.tags ? story.tags.map(x =>
@@ -220,7 +219,7 @@ export default function StoryEditor() {
                     variant={"contained"}
                     onClick={saveStory}>SAVE
                 </Button>
-                <p>Changes won't save unless you press SAVE!</p>
+                <p>Changes will not save unless you press SAVE</p>
             </div>}
 
         </div>

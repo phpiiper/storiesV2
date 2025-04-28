@@ -1,9 +1,9 @@
 
-import { signIn, signOut, useSession } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import TextField from "@mui/material/TextField";
 import {Button} from "@mui/material";
 import axios from "axios";
-import { useState, useEffect, useCallback } from "react";
+import { useState, } from "react";
 
 export default function SignInForm({open=false}) {
     const { status, data: sessionData, update } = useSession();

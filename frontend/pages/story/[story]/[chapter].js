@@ -65,14 +65,14 @@ export default function ChapterPage() {
     if (!storyObj){
         return (<>
             <HomeBar />
-            <div>Story Doesn't Exist</div>
+            <div>Story Does Not Exist</div>
         </>)
     }
 
     if (!chapter || Object.keys(chapter).length === 0){
         return (<>
             <HomeBar />
-            <div>Chapter Doesn't Exist</div>
+            <div>Chapter Does Not Exist</div>
     </>)
     }
 

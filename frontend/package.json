@@ -1,0 +1,41 @@
+{
+  "name": "frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/icons-material": "^7.0.2",
+    "@mui/material": "^7.0.2",
+    "axios": "^1.9.0",
+    "bcrypt": "^5.1.1",
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "email-validator": "^2.0.4",
+    "form-data": "^4.0.2",
+    "formidable": "^3.5.4",
+    "fs": "^0.0.1-security",
+    "multer": "^1.4.5-lts.2",
+    "next": "15.3.1",
+    "next-auth": "^4.24.11",
+    "os": "^0.1.2",
+    "perf_hooks": "^0.0.1",
+    "pg": "^8.15.6",
+    "postgres": "^3.4.5",
+    "react": "^19.0.0",
+    "react-dom": "^19.1.0",
+    "react-markdown": "^10.1.0",
+    "tls": "^0.0.1"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "eslint": "^9",
+    "eslint-config-next": "15.3.1"
+  }
+}

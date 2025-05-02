@@ -6,21 +6,22 @@ import fs from "fs/promises"
 export default class ChaptersDAO {
     static async getChaptersByStory(storyId=0) {
         try {
-            let cursor;
-                cursor = await query("SELECT * FROM chapters WHERE story_id = $1", [storyId])
-            return { cursor, totalNumChapters: cursor.rowCount }
+            let queryRes = await query("SELECT * FROM chapters WHERE story_id = $1", [storyId])
+            return { data: queryRes }
         }  catch(e) {
             console.error(`${storyId}: something went wrong in getChaptersByStory: ${e}`)
-            throw e
+            return {
+                error: e
+            }
         }
     }
     static async getChapterById(id) {
         try {
-            let cursor = await query("SELECT * FROM chapters WHERE id = $1", [id])
-            return cursor.rows[0]
+            let queryRes = await query("SELECT * FROM chapters WHERE id = $1", [id])
+            return {data: queryRes.rows[0]}
         }  catch(e) {
-            console.error(`something went wrong in getChapterById: ${e}`)
-            throw e
+            console.error(`${id}: something went wrong in getChapterById: ${e}`)
+            return {error: e}
         }
     }
 
@@ -47,14 +48,14 @@ export default class ChaptersDAO {
                     readableStream.on("error", reject);
                 });
             };
-            const fileContents = await streamToString(downloadResponse.readableStreamBody);
+            const fileContents = await streamToString(stream);
 
             return {
                 chapter: fileContents
             };
 
         }  catch(e) {
-            console.error(`${filename}: something went wrong in readChapterById: ${e}`)
+            console.error(`${filename}: something went wrong in getChapterFile: ${e}`)
             return {
                 chapter: undefined,
                 error: e,
@@ -63,10 +64,11 @@ export default class ChaptersDAO {
         }
     }
 
-    static async updateChapter(storyId, fileUrl, chapterId, chapterName, chapterMode){
+    static async updateChapter(storyId, fileUrl, chapterId, chapterName, chapterMode, chapterFileName){
+        try {
         // UPDATE DB
         let res = await query("UPDATE chapters SET name = $1, mode = $2, last_updated = current_timestamp WHERE id=$3", [chapterName, chapterMode, chapterId])
-        const fileName = `${chapterId}.md`;
+
         // Upload File into Azure
         // FETCH the file contents from fileUrl
         const fileResponse = await axios.get(fileUrl, {
@@ -76,7 +78,9 @@ export default class ChaptersDAO {
         const fileBuffer = fileResponse.data;
 
         // UPLOAD to Azure Blob Storage
-        const azureUrl = `${process.env.AZURE_STORAGE_URL}/chapters/${fileName}?${process.env.AZURE_BLOB_SAS_TOKEN}`;
+        const azureUrl = `${process.env.AZURE_STORAGE_URL}/chapters/${chapterFileName}?${process.env.AZURE_BLOB_SAS_TOKEN}`;
+        console.log(azureUrl)
+        console.log(fileUrl)
 
         const uploadResponse = await axios.put(azureUrl, fileBuffer, {
             headers: {
@@ -87,10 +91,12 @@ export default class ChaptersDAO {
 
         return {
             chapter: uploadResponse.data,
-            status: ["CREATE", uploadResponse.status],
-            headers: uploadResponse.headers,
-            postgres: res,
+            status: uploadResponse.status,
         };
+        }  catch(e) {
+            console.error(`${chapterId}: something went wrong in updateChapter: ${e}`)
+            return {error: e}
+        }
 
     }
 
@@ -127,38 +133,31 @@ export default class ChaptersDAO {
 
             return {
                 chapter: uploadResponse.data,
-                status: ["CREATE", uploadResponse.status],
-                headers: uploadResponse.headers,
-                postgres: res,
+                status: uploadResponse.status,
             };
 
         } catch (e) {
             console.error(`something went wrong in postChapter: ${e}`);
-            throw e;
+            return {error: e};
         }
     }
 
 
-    static async deleteChapterById(id) {
+    static async deleteChapterById(id,filename) {
         try {
             // Delete File from Azure
-            const fileURL = `${id}.md`
-            const url = process.env.AZURE_STORAGE_URL + `/chapters/${fileURL}?${process.env.AZURE_BLOB_SAS_TOKEN}`
+            const url = process.env.AZURE_STORAGE_URL + `/chapters/${filename}?${process.env.AZURE_BLOB_SAS_TOKEN}`
             const response = await axios.delete(url);
-
             // DELETE Row from Postgreqsl
-            let res = await query("DELETE FROM chapters WHERE id = $1", [id])
-
+            await query("DELETE FROM chapters WHERE id = $1", [id])
             return {
                 response: response.data,
-                status: ["DELETE", response.status],
-                headers: response.headers,
-                postgres: res,
+                status: response.status,
             }
 
         } catch (e) {
             console.error(`something went wrong in deleteChapter: ${e}`)
-            throw e
+            return {error: e};
         }
     }
 

@@ -3,45 +3,54 @@ import fs from 'fs/promises'
 
 export default class ChaptersController {
     static async apiGetChaptersByStory(req,res,next) {
-        const { id } = req.query;
+        try {
+            const { id } = req.query;
 
-        const { cursor, totalNumChapters } = await ChaptersDAO.getChaptersByStory(id)
+            const { data, error } = await ChaptersDAO.getChaptersByStory(id)
 
-        let response = {
-            chapters: cursor.rows,
-            total_results: totalNumChapters,
+            let response = {
+                data: data?.rows,
+                error: error,
+            }
+            if (error) { res.status(404).json(response)
+            } else { res.status(200).json(response) }
+        } catch(e) {
+            res.status(500).json({error: e})
         }
-        res.json(response)
     }
 
     static async apiGetChapterById(req, res, next) {
         try {
-            let id = req.params.id || {}
-            let chapter = await ChaptersDAO.getChapterById(id)
-            if(!chapter) {
-                res.status(404).json({ error: "not found", id: id})
-                return
+            const {id} = req.params
+            let {data, error } = await ChaptersDAO.getChapterById(id)
+            let response = {
+                data: data,
+                error: error,
             }
-            res.json(chapter)
+            if (error) { res.status(404).json(response)
+            } else { res.status(200).json(response) }
+
         } catch(e) {
             console.log(`api, ${e}`)
-            res.status(500).json({error: e, id: req.params.id})
+            res.status(500).json({error: e})
         }
     }
 
     static async apiGetChapterFileById(req, res, next) {
         try {
-            let id = req.params.fileName || 0
+            const id = req.params.filename
             let {chapter, error, filename} = await ChaptersDAO.getChapterFile(id)
-            if(!chapter) {
-                res.status(404).json({ error: error, filename, msg: "uhoh"})
-                return
+            let response = {
+                data: chapter,
+                error: error,
+                filename: filename,
             }
-            res.json({
-                chapter: chapter
+            if (error || !chapter) { return res.status(404).json(response)}
+            return res.status(200).json({
+                data: chapter
             })
         } catch(e) {
-            console.log(`api, ${e}`)
+            console.log(`apiGetChapterByFileId, ${e}`)
             res.status(500).json({error: e})
         }
     }
@@ -50,25 +59,25 @@ export default class ChaptersController {
         try {
             const {storyId, chapterName, chapterMode, fileUrl} = req.body;
 
-            let {chapter, status, postgres} = await ChaptersDAO.postChapter(storyId, fileUrl, chapterName, chapterMode)
+            let {chapter, status, error} = await ChaptersDAO.postChapter(storyId, fileUrl, chapterName, chapterMode)
             //
             res.json({
-                chapter, status, postgres
+                data: chapter, status, error
             })
         } catch(e) {
-        console.log(`api, ${e}`)
+        console.log(`apiPostChapter, ${e}`)
             res.status(500).json({error: e, })
         }
     }
 
     static async apiUpdateChapter(req, res, next){
         try {
-            const {storyId, chapterName, chapterId, chapterMode, fileUrl} = req.body;
+            const {storyId, chapterName, chapterId, chapterMode, chapterFileName, fileUrl} = req.body;
 
-            let {chapter, status, postgres} = await ChaptersDAO.updateChapter(storyId, fileUrl, chapterId, chapterName, chapterMode)
+            let {chapter, status, error} = await ChaptersDAO.updateChapter(storyId, fileUrl, chapterId, chapterName, chapterMode, chapterFileName)
             //
             res.json({
-                chapter, status, postgres
+                chapter, status, error
             })
         } catch(e) {
             console.log(`apiUpdateChapter, ${e}`)
@@ -79,10 +88,10 @@ export default class ChaptersController {
     static async apiDeleteChapter(req, res, next){
         try {
 
-            const {chapterID} = req.query;
-            let {chapter, status, headers, postgres, msg} = await ChaptersDAO.deleteChapterById(chapterID)
+            const {chapterID, fileName} = req.query;
+            let {chapter, status, error} = await ChaptersDAO.deleteChapterById(chapterID, fileName)
             res.json({
-                chapter, status, headers, postgres, msg
+                data: chapter, status, error
             })
         } catch(e) {
             console.log(`apiDeleteChapter, ${e}`)

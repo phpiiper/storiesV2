@@ -1,5 +1,6 @@
 import "./globals.css";
 import { SessionWrapper } from "./providers/session";
+import { SnackbarWrapper} from './providers/snackbar'
 
 export const metadata = {
   title: "stories | phpiiper"
@@ -10,7 +11,9 @@ export default function RootLayout({ children }) {
       <html lang="en">
       <body>
       <SessionWrapper>
-        {children}
+        <SnackbarWrapper>
+            {children}
+        </SnackbarWrapper>
       </SessionWrapper>
       </body>
       </html>

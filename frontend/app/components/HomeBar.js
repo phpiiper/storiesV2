@@ -15,6 +15,7 @@ import SignInForm from "./SignInForm";
 import IconLink from "./IconLink";
 
 import { signOut, useSession } from "next-auth/react";
+import {useRouter} from "next/navigation";
 
 
 
@@ -22,6 +23,7 @@ export default function HomeBar() {
     const [openDrawer, setOpenDrawer] = useState(false);
     const [openLogin, setOpenLogin] = useState(false);
     const { status, data: sessionData } = useSession();
+    const router = useRouter();
     return (
         <div className={"home-bar"}>
             <a href={"/"}><h2 className={"home-site-name"}>Readceipt</h2></a>
@@ -29,7 +31,11 @@ export default function HomeBar() {
                 <TextField
                     id={"home-search-input"}
                     label={"Search"}
-                    variant={"filled"}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter"){
+                            router.push(`/search?title=${e.target.value}`)
+                        }
+                    }}
                 />
             </div>
             <button className={"home-drawer-button"} onClick={() => setOpenDrawer(true)}>

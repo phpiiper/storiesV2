@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -11,20 +11,33 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
+    "@lexical/react": "^0.31.0",
     "@mui/icons-material": "^7.0.2",
     "@mui/material": "^7.0.2",
+    "@syncfusion/ej2-react-richtexteditor": "^29.1.40",
+    "@tiptap/extension-character-count": "^2.11.9",
+    "@tiptap/extension-underline": "^2.11.9",
+    "@tiptap/pm": "^2.11.9",
+    "@tiptap/react": "^2.11.9",
+    "@tiptap/starter-kit": "^2.11.9",
+    "@uiw/react-markdown-editor": "^6.1.4",
     "@vercel/blob": "^1.0.0",
     "axios": "^1.9.0",
+    "babel-polyfill": "^6.26.0",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
+    "draft-js": "^0.11.7",
+    "lexical": "^0.31.0",
     "next": "15.3.1",
     "next-auth": "^4.24.11",
     "pg": "^8.15.6",
     "postgres": "^3.4.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-markdown": "^10.1.0"
+    "react-markdown": "^10.1.0",
+    "slate-react": "^0.114.2",
+    "tiptap-markdown": "^0.8.10"
   }
 }

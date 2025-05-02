@@ -9,24 +9,17 @@ export default class StoriesDAO {
             const userFilter = `%${user}%`;
             const genreFilter = `%${genre}%`;
 
-            const cursor = await query(
-                `SELECT * FROM stories
-                WHERE title ILIKE $1
-                  AND user ILIKE $2
-                 AND genre ILIKE $3`,
-                 [titleFilter, userFilter, genreFilter]
+            const stories = await query(`SELECT * FROM stories WHERE title ILIKE $1 AND user ILIKE $2 AND genre ILIKE $3`, [titleFilter, userFilter, genreFilter]
             );
 
 
             return {
-                cursor: cursor,
-                totalNumStories: cursor.rowCount
+                data: stories.rows,
             };
         } catch (e) {
             console.error(`Something went wrong in getStories: ${e}`);
             return {
-                stories: [],
-                totalNumStories: 0
+                error: e
             };
         }
     }
@@ -34,11 +27,13 @@ export default class StoriesDAO {
 
     static async getStoryById(id) {
         try {
-            let cursor = await query("SELECT * FROM stories WHERE id = $1", [id])
-            return cursor.rows[0]
+            let story = await query("SELECT * FROM stories WHERE id = $1", [id])
+            return {data: story.rows[0] }
         }  catch(e) {
             console.error(`something went wrong in getStoryById: ${e}`)
-            throw e
+            return {
+                error: e
+            };
         }
     }
 
@@ -49,35 +44,32 @@ export default class StoriesDAO {
 
             let returnStory = await query("SELECT * FROM stories WHERE id = $1", [response.rows[0].id])
             return {
-                response: response.rows,
-                status: response.rowCount,
-                storyObj: returnStory.rows[0]
+                data: returnStory.rows[0],
             }
         } catch(e) {
             console.error(`something went wrong in createStory: ${e}`)
-            throw e
+            return {
+                error: e
+            };
         }
     }
 
     static async updateStory(storyObj){
         try {
             let q = await query("SELECT * FROM stories WHERE id = $1", [storyObj.id]);
-            if (q.rowCount > 0) {
                 let response = await query("UPDATE stories SET user_id=$1, title=$2, description=$3, genre=$4, mode=$5, tags=$6, last_updated = current_timestamp WHERE id=$7",[storyObj.user_id,storyObj.title,storyObj.description,storyObj.genre,storyObj.mode,storyObj.tags,storyObj.id])
                 // last updated
                 await query("UPDATE stories SET last_updated = current_timestamp WHERE id=$1",[storyObj.id])
 
                 return {
-                    response: response,
-                    status: response.rowCount
+                    data: q.rows[0],
                 }
 
-            } else {
-                return { status: ["NOT FOUND",400,storyObj]}
-            }
         } catch(e) {
             console.error(`something went wrong in createStory: ${e}`)
-            throw e
+            return {
+                error: e
+            };
         }
     }
 

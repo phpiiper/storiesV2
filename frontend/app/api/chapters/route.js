@@ -22,21 +22,16 @@ export async function GET(request) {
                 headers: auth
             })
 
-            const filteredChapters = chapters.data.chapters.filter(x => x.mode === "Public" || (session && session.user.id === story.data.user_id))
+            const filteredChapters = chapters.data.data.filter(x => x.mode === "Public" || (session && session.user.id === story.data.data.user_id))
 
-            return new Response(JSON.stringify({
-                chapters: filteredChapters,
-                total_results: filteredChapters.length,
-            }), {status: 200});
+            return new Response(JSON.stringify(filteredChapters), {status: 200});
         }
         if (chapterId) {
             let chapter = await axios.get(`${process.env.BACKEND_URL}/api/v1/chapters/id/${chapterId}`, {
                 headers: auth
             })
 
-            return new Response(JSON.stringify({
-                chapter: chapter.data,
-            }), {status: 200});
+            return new Response(JSON.stringify(chapter.data.data), {status: 200});
 
         }
         if (fileName) {
@@ -46,10 +41,7 @@ export async function GET(request) {
             if (!file) {
                 return new Response(JSON.stringify({msg: "Not Found"}), {status: 404});
             }
-            return new Response(JSON.stringify({
-                chapter: file.data,
-                fileName: fileName,
-            }), {status: 200});
+            return new Response(JSON.stringify(file.data.data), {status: 200});
         }
     } catch (e) {
         console.error(e)
@@ -67,26 +59,36 @@ export async function PUT(request) {
     const auth = {Authorization: `Bearer ${process.env.AUTH_TOKEN}`}
     const form = await request.formData();
 
-    const story = await axios.get(`${process.env.BACKEND_URL}/api/v1/stories/id/${form.get('storyId')}`,{headers: auth});
+    const storyReq = await axios.get(`${process.env.BACKEND_URL}/api/v1/stories/id/${form.get('storyId')}`,{headers: auth});
+    const story = storyReq.data
+
     if (!story.data || story.data.user_id !== session.user.id){
         return new Response(JSON.stringify({msg: "Unauthorized"}), {status: 400});
     }
-
     const file = form.get('file');
     const blob = await put(file.name, file, {
         access: "public", allowOverwrite: true,
     })
+
     const res = await axios.put(`${process.env.BACKEND_URL}/api/v1/chapters`, {
         storyId: form.get('storyId'),
         chapterName: form.get('chapterName'),
+        chapterId: form.get('chapterId'),
         chapterMode: form.get('chapterMode'),
+        chapterFileName: form.get('chapterFileName'),
         fileUrl: blob.url
     }, {
         headers: auth
     })
-    await del(blob.url);
 
+    if (res.status !== 200) {
+        // await del(blob.url);
+        return new Response(JSON.stringify({
+            response: res.data
+        }), {status: 400});
+    }
 
+    // await del(blob.url);
     return new Response(JSON.stringify({
         response: res.data
     }), {status: 200});
@@ -99,7 +101,7 @@ export async function POST(request) {
     const form = await request.formData();
 
     const story = await axios.get(`${process.env.BACKEND_URL}/api/v1/stories/id/${form.get('storyId')}`,{headers: auth});
-    if (!story.data || story.data.user_id !== session.user.id){
+    if (!story.data || story.data.data.user_id !== session.user.id){
         return new Response(JSON.stringify({msg: "Unauthorized"}), {status: 400});
     }
 
@@ -107,6 +109,7 @@ export async function POST(request) {
     const blob = await put(file.name, file, {
         access: "public", allowOverwrite: true,
     })
+
     const res = await axios.post(`${process.env.BACKEND_URL}/api/v1/chapters`, {
         storyId: form.get('storyId'),
         chapterName: form.get('chapterName'),
@@ -115,7 +118,6 @@ export async function POST(request) {
     }, {
         headers: auth
     })
-    await del(blob.url);
 
 
     return new Response(JSON.stringify({
@@ -131,15 +133,18 @@ export async function DELETE(request) {
     const query = request.nextUrl.searchParams
     const storyID = query.get('storyID')
     const chapterID = query.get('chapterID')
-    let story = await axios.get(`${process.env.BACKEND_URL}/api/v1/stories/id/${JSON.parse(storyID[0])}`,{
+    const chapterFileName = query.get('chapterFileName')
+
+    let story = await axios.get(`${process.env.BACKEND_URL}/api/v1/stories/id/${storyID}`,{
         headers: auth
     })
 
     if (story.data) {
-        if (!session || story.data.user_id !== session.user.id) {
+        if (!session || story.data.data.user_id !== session.user.id) {
             return new Response(JSON.stringify({msg: "Unauthorized"}), {status: 400});
         }
-        const response = await axios.delete(`${process.env.BACKEND_URL}/api/v1/chapters?storyID=${storyID}&chapterID=${chapterID}`,{
+
+        const response = await axios.delete(`${process.env.BACKEND_URL}/api/v1/chapters?chapterID=${chapterID}&fileName=${chapterFileName}`,{
             headers: auth
         })
         return new Response(JSON.stringify({

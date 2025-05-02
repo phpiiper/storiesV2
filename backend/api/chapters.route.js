@@ -6,7 +6,7 @@ const router = express.Router()
 router.route("/id/:id").get(ChaptersController.apiGetChapterById)
 router.route("/story").get(ChaptersController.apiGetChaptersByStory)
 
-router.route("/file/:fileName").get(ChaptersController.apiGetChapterFileById)
+router.route("/file/:filename").get(ChaptersController.apiGetChapterFileById)
 
 // POST
 router.route("/").post(ChaptersController.apiPostChapter)

@@ -6,15 +6,19 @@ import axios from "axios";
 import TextField from "@mui/material/TextField";
 import {Button} from "@mui/material";
 import LoadingDiv from "@/app/components/LoadingDiv";
+import ErrorPage from "@/app/components/ErrorPage";
 
 export default function Index() {
     const { status, data: sessionData } = useSession();
     const [stories, setStories] = useState([])
     const [storyPopup, setStoryPopup] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isError, setIsError] = useState(false);
 
     async function getStories() {
         const res = await axios.get(`api/stories?username=${sessionData.user.name}`)
-        setStories(res.data.stories)
+        setStories(res.data)
+        setIsLoading(false)
     }
 
     const createStory = async () => {
@@ -35,24 +39,32 @@ export default function Index() {
         }
     }
 
-    useEffect(() => {
-        if (status !== "authenticated") {return}
-        getStories()
-    }, [status === "authenticated"]);
 
-    if (status === "loading"){
-        return <LoadingDiv />
-    }
-    if (status === "unauthenticated"){
+    useEffect(() => {
+        if (status === "loading") {return}
+        getStories()
+    }, [status]);
+
+
+    if (status === "unauthenticated" || isError){
         return (<>
-            <Head>
-                <title>Create Story</title>
-            </Head>
-            <div>NOT AUTHENTICATED</div>
+            <HomeBar />
+            <ErrorPage error={404} msg={isError ? "ERROR FETCHING STORY" : "NOT AUTHENTICATED"}></ErrorPage>
         </>)
     }
 
-    console.log(stories)
+    if (isLoading){
+        return (<>
+            <HomeBar />
+            <LoadingDiv />
+        </>)
+    }
+
+
+
+
+
+    // console.log(stories)
 
     return (<>
         <HomeBar />

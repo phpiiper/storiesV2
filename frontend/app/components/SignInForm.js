@@ -13,7 +13,6 @@ export default function SignInForm({open=false}) {
     async function signUpFunction() {
         let user = document.getElementById("sign-in-username").value;
         let pw = document.getElementById("sign-in-password").value;
-        console.log(user,pw)
         try {
             const res = await axios.post("/api/user", {
                 username: user,

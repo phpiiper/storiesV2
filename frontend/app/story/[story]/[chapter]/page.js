@@ -8,18 +8,27 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import SettingsPopup from "../../../components/SettingsPopup";
 import {useParams} from "next/navigation";
 import LoadingDiv from "@/app/components/LoadingDiv";
+import ErrorPage from "@/app/components/ErrorPage";
 
 
 
 export default function ChapterPage() {
     const router = useRouter();
-    const params = useParams()
+    const params = useParams();
+    const [isLoading, setIsLoading] = useState(true);
+    const [isError, setIsError] = useState(false);
     const { story: storyID, chapter: chapterID } = params;
 
     const [storyObj, setStoryObj] = useState({});
     const [chaptersObj, setChaptersObj] = useState({});
     const [chapter, setChapter] = useState({});
     const [chapterFile, setChapterFile] = useState(undefined);
+    const [preferenceOptions, setPreferenceOptions] = useState({
+        lineHeight: [1,1.15,1.5,2],
+        alignText: ["Left","Justify","Center","Right"],
+        fontFamily: ["EB Garamond","Libre Baskerville","Ysabeau","Noto Sans","Calibri"],
+        fontSizeMin: 10, fontSizeMax: 40
+    })
     const [preferences, setPreferences] = useState({
         fontSize: 18, fontFamily: "EB Garamond", lineHeight: 1.5, pagePadding: 5, alignText: "Left",
     })
@@ -35,15 +44,18 @@ export default function ChapterPage() {
                 const chaptersObj = await axios.get(`/api/chapters?storyId=${storyID}`)
                 const chapters = chaptersObj.data;
                 setStoryObj(story)
-                setChaptersObj(chapters.chapters)
-                const ch = chapters.chapters[chapterID-1]
-                ch.index = chapterID-1
+                setChaptersObj(chapters)
+                let c_id = typeof chapterID === "string" ? parseInt(chapterID) : chapterID;
+                let ch = chapters[c_id-1]
+                ch.index = c_id-1
                 setChapter(ch)
                 const chapterFile = await axios.get(`/api/chapters?fileName=${ch.file}`)
                 const chapterFileData = chapterFile.data;
-                setChapterFile(chapterFileData.chapter)
+                setChapterFile(chapterFileData)
+                setIsLoading(false)
             } catch (e) {
                 console.log(`Error: ${e}`)
+                setIsError(true)
             }
         }
         getData()
@@ -57,31 +69,21 @@ export default function ChapterPage() {
         elem.style.lineHeight = preferences.lineHeight;
         elem.style.padding = `0 ${preferences.pagePadding}%`;
         elem.style.textAlign = preferences.alignText;
-    }, [chapterBodyRef.current,preferences])
+    }, [chapterBodyRef.current,preferences,chapterFile])
 
-    if (!storyObj || Object.keys(storyObj).length === 0){
+    if (isLoading) {
         return (<>
             <HomeBar />
             <LoadingDiv />
         </>)
     }
 
-    if (!storyObj){
+    if (isError){
         return (<>
             <HomeBar />
-            <div>Story Does Not Exist</div>
+            <ErrorPage></ErrorPage>
         </>)
     }
-
-    if (!chapter || Object.keys(chapter).length === 0){
-        return (<>
-            <HomeBar />
-            <div>Chapter Does Not Exist</div>
-        </>)
-    }
-
-
-    console.log(chaptersObj,chapter)
 
     return (<>
         <HomeBar />
@@ -99,7 +101,7 @@ export default function ChapterPage() {
                 <h1 className={"chapter-name"}>{chapter.name}</h1>
                 <a href={`/story/${storyObj.id}`} className={"story-name"}>{storyObj.title}</a>
                 <div className={"chapter-body"} ref={chapterBodyRef}>
-                    {chapterFile ? <Markdown>{chapterFile.chapter}</Markdown> : <LoadingDiv />}
+                    {chapterFile ? <Markdown>{chapterFile}</Markdown> : <LoadingDiv />}
                 </div>
             </div>
             <div className={"chapter-footer-buttons ui-elem"}>
@@ -115,7 +117,9 @@ export default function ChapterPage() {
             </div>
 
             <div className={"settings-nav"}>
-                {openSettings ? <SettingsPopup preferences={preferences} setPreferences={setPreferences}/> : <></>}
+                {openSettings ? <SettingsPopup
+                    preferenceOptions={preferenceOptions}
+                    preferences={preferences} setPreferences={setPreferences}/> : <></>}
                 <button
                     className={`button ${openSettings ? "active" : ""}`}
                     onClick={() => setOpenSettings(!openSettings)}

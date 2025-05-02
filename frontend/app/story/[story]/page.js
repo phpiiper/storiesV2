@@ -5,10 +5,15 @@ import HomeBar from "../../components/HomeBar";
 import { useRouter } from 'next/navigation'
 import { useParams } from 'next/navigation'
 import LoadingDiv from "@/app/components/LoadingDiv";
+import axios from "axios";
+import ErrorPage from "@/app/components/ErrorPage";
 
 export default function Story() {
     const router = useRouter();
     const params = useParams()
+    const [isLoading, setIsLoading] = useState(true);
+    const [isError, setIsError] = useState(false);
+
     const [story, setStory] = useState({});
     const [chapters, setChapters] = useState([]);
     const [author, setAuthor] = useState({});
@@ -21,33 +26,33 @@ export default function Story() {
             if (res.ok) {
                 const json = await res.json();
                 setStory(json);
-                const ch_res = await fetch(`/api/chapters?storyId=${storyId}`);
-                const ch_json = await ch_res.json();
-                setChapters(ch_json.chapters);
-                const user_res = await fetch(`/api/user?id=${json.user_id}`);
-                const user_json = await user_res.json();
+                const ch_res = await axios.get(`/api/chapters?storyId=${storyId}`);
+                const ch_json = ch_res.data
+                setChapters(ch_json);
+                const user_res = await axios.get(`/api/user?id=${json.user_id}`);
+                const user_json = await user_res.data;
                 setAuthor(user_json ? user_json.user : "Unknown");
+                setIsLoading(false);
             } else {
                 console.log("Error fetching story");
                 setStory(undefined)
+                setIsError(true)
             }
         }
         getStory();
     },[params.story]);
 
-    // console.log(story,chapters,author);
-    console.log(story,params.story)
-    console.log(chapters[0]);
-    if (story === {}){
+    if (isError){
+        return (<>
+            <HomeBar />
+            <ErrorPage></ErrorPage>
+        </>)
+    }
+
+    if (isLoading){
         return (<>
             <HomeBar />
             <LoadingDiv />
-        </>)
-    }
-    if (!story){
-        return (<>
-            <HomeBar />
-            <div>Story Doesn't Exist</div>
         </>)
     }
 

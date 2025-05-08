@@ -1,35 +1,40 @@
-'use client'
-import Button from "@mui/material/Button";
-import {useEffect, useState} from "react";
-import axios from "axios";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from '@mui/icons-material/Delete';
+import CodeIcon from '@mui/icons-material/Code';
+import Confirmation from "../components/Confirmation";
 
 export default function EditChapter({funcs, chapters, chapterID}) {
-    const ch = chapters.find(x => x.id === chapterID)
-    const [chapterFileText, setChapterFileText] = useState("")
-
-    useEffect(() => {
-        if (ch){
-           async function getFile() {
-                const file = await axios.get(`/api/chapters?fileName=${ch.file}`)
-                if (file.data){
-                    setChapterFileText(file.data)
-                }
-           }
-           getFile()
-        }
-    }, [ch]);
+    const chInd = chapters.findIndex(x => x.id === chapterID)
+    const ch = chapters[chInd]
 
     return(<><div className={"edit-chapter-div"} key={"ch-"+chapterID}>
-        <div className={"button-list row"}>
-            <Button color={"error"} variant={"contained"} onClick={() => {funcs.deleteChapter(ch.id)}}>DELETE</Button>
-            <Button className={"button-a"} variant={"contained"} href={`/create/${ch.story_id}/${chapters.findIndex(x => x.id === chapterID)+1}`}>EDIT</Button>
-            {process.env.NODE_ENV === "development" && <Button variant={"contained"} color={"secondary"} onClick={() => {
-                console.log(ch)
-            }}>Log File</Button>}
-
+        <span>{chInd+1}</span>
+        <span>{ch.name}</span>
+        <div
+            className={"button-list row"}
+            style={{marginLeft: "auto"}}
+        >
+            <a className="box-icon-button" href={`/story/${ch.story_id}/${chInd+1}`}><button><VisibilityIcon /></button></a>
+            <a className="box-icon-button" href={`/create/${ch.story_id}/${chapters.findIndex(x => x.id === chapterID)+1}`}><button><EditIcon /></button></a>
+            {process.env.NODE_ENV === "development" && <a className="box-icon-button" onClick={()=> console.log(ch)}><button><CodeIcon /></button></a>}
+            <Confirmation
+                text={"Are you sure you want to delete this chapter?"}
+                onConfirm={() => {funcs.deleteChapter(ch.id)}}
+            >
+                <a className={"box-icon-button"}><button><DeleteIcon /></button></a>
+            </Confirmation>
         </div>
-            <span className={"chapter-name"}>{ch.name}</span>
     </div>
     </>
     )
 }
+
+/*
+
+            <button color={"error"} variant={"contained"} onClick={() => {funcs.deleteChapter(ch.id)}}>DELETE</button>
+            <button className={"button-a"} variant={"contained"} href={`/create/${ch.story_id}/${chapters.findIndex(x => x.id === chapterID)+1}`}>EDIT</button>
+            {process.env.NODE_ENV === "development" && <button variant={"contained"} color={"secondary"} onClick={() => {
+                console.log(ch)
+            }}>Log File</button>}
+ */

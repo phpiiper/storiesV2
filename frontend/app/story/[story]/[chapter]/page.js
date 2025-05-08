@@ -67,66 +67,43 @@ export default function ChapterPage() {
         elem.style.fontSize = preferences.fontSize + "px";
         elem.style.fontFamily = preferences.fontFamily;
         elem.style.lineHeight = preferences.lineHeight;
-        elem.style.padding = `0 ${preferences.pagePadding}%`;
+        elem.style.paddingLeft = `${preferences.pagePadding}%`;
+        elem.style.paddingRight = `${preferences.pagePadding}%`;
         elem.style.textAlign = preferences.alignText;
     }, [chapterBodyRef.current,preferences,chapterFile])
 
     if (isLoading) {
         return (<>
-            <HomeBar />
             <LoadingDiv />
         </>)
     }
 
     if (isError){
         return (<>
-            <HomeBar />
             <ErrorPage></ErrorPage>
         </>)
     }
 
+console.log(chapter.index)
+
     return (<>
-        <HomeBar />
-        <div id={"main-content"} style={{
-            padding: "1rem 0"
-        }}>
-            <div
-                className={"chapter-page"}
-                onClick={() => {
-                    if (openSettings){
-                        setOpenSettings(false)
-                    }
-                }}
-            >
-                <h1 className={"chapter-name"}>{chapter.name}</h1>
-                <a href={`/story/${storyObj.id}`} className={"story-name"}>{storyObj.title}</a>
-                <div className={"chapter-body"} ref={chapterBodyRef}>
-                    {chapterFile ? <Markdown>{chapterFile}</Markdown> : <LoadingDiv />}
+        <div className={"chapter-page page"}>
+            <a href={"/"}>Homepage</a>
+            <h1 style={{marginLeft: "-4px"}}>{chapter.name}</h1>
+            <a href={`/story/${storyObj.id}`} style={{
+                fontSize: "0.9rem"
+            }}>{storyObj.title}</a>
+            <div className={"chapter-body"} ref={chapterBodyRef}>
+                {chapterFile ? <Markdown>{chapterFile}</Markdown> : <LoadingDiv />}
+                <div className={"chapter-footer"}>
+                    <hr />
+                    <div className={"button-list row"}>
+                        {chapter.index !== 0 && <a href={chapter.index}>PREVIOUS</a>}
+                        {chapter.index < chaptersObj.length - 1 && <a href={chapter.index+2}>NEXT</a>}
+                    </div>
                 </div>
             </div>
-            <div className={"chapter-footer-buttons ui-elem"}>
-                {chapter.index > 0 ? (
-                    <a href={`/story/${storyObj.id}/${chapter.index}`}>PREVIOUS</a>
-                ) : null}
-
-                <a href={`/story/${storyObj.id}`}>Title Page</a>
-
-                {chapter.index + 1 < chaptersObj.length ? (
-                    <a href={`/story/${storyObj.id}/${chapter.index + 2}`}>NEXT</a>
-                ) : null}
-            </div>
-
-            <div className={"settings-nav"}>
-                {openSettings ? <SettingsPopup
-                    preferenceOptions={preferenceOptions}
-                    preferences={preferences} setPreferences={setPreferences}/> : <></>}
-                <button
-                    className={`button ${openSettings ? "active" : ""}`}
-                    onClick={() => setOpenSettings(!openSettings)}
-                >
-                    <SettingsIcon className={"icon"}/>
-                </button>
-            </div>
         </div>
-    </>);
+    </>)
+
 }

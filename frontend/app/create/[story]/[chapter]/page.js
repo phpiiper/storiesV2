@@ -3,8 +3,6 @@ import {useParams, useRouter} from "next/navigation";
 import {useEffect, useState, useRef} from "react";
 import axios from "axios";
 import HomeBar from "../../../components/HomeBar";
-import TextField from "@mui/material/TextField";
-import {Button} from "@mui/material";
 import LoadingDiv from "@/app/components/LoadingDiv";
 import ErrorPage from "@/app/components/ErrorPage";
 
@@ -15,15 +13,13 @@ import Underline from '@tiptap/extension-underline'
 import CharacterCount from '@tiptap/extension-character-count'
 
 import { useSnackbar } from '@/app/providers/snackbar';
-import Select from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
+import EditRoundedIcon from '@mui/icons-material/EditRounded';
 
 
 export default function EditChapter(){
     const router = useRouter();
     const params = useParams()
     const { story: storyID, chapter: chapterIndex } = params;
-    const DownloadRef = useRef(null);
     const [chapter, setChapter] = useState(undefined);
     const [chapterText, setChapterText] = useState("");
     const [isLoading, setIsLoading] = useState(true);
@@ -102,64 +98,67 @@ export default function EditChapter(){
 
     if (isLoading){
         return (<>
-            <HomeBar />
             <LoadingDiv />
         </>)
     }
 
 
-    return (<>
-        <a id={"download"} ref={DownloadRef}/>
-        <HomeBar />
-        <div className={"edit-chapter-page"}>
-            <div className={"button-list row sticky-top"}>
-                <Button
-                    variant={"contained"}
-                    color={"secondary"}
-                    href={"/create/" + storyID}
-                > GO BACK </Button>
-                <Button
-                    variant={"contained"}
-                    color={"error"}
-                    onClick={deleteChapter}
-                > DELETE </Button>
-                <Button
-                    variant={"contained"}
-                    onClick={saveChapter}
-                > SAVE </Button>
-                {process.env.NODE_ENV === "development" &&<Button
-                    variant={"contained"}
-                    onClick={()=>{console.log(chapter); console.log(editor.storage.markdown.getMarkdown());}}
-                > LOG </Button>}
-            </div>
-            <TextField
+    return (<div className={"page edit-chapter-page"}>
+        <div className={"flex"}>
+            <label htmlFor={"chapter-name"}><EditRoundedIcon/></label>
+            <input
+                className={"edit-chapter-input"}
                 id={"chapter-name"}
                 value={chapter.name}
-                label={"Chapter Name"}
                 onChange={(event) => {setChapter({...chapter,name:event.target.value})}}
-                fullWidth
             />
-            <TextField
-                id={"chapter-mode"}
-                label={"Mode"}
-                value={chapter.mode}
-                onChange={(event) => {setChapter({...chapter,mode:event.target.value})}}
-                select
-            >
-                <MenuItem value={"Private"}>Private</MenuItem>
-                <MenuItem value={"Public"}>Public</MenuItem>
-            </TextField>
+        </div>
+            <div className={"container row"}>
+                <div className={"container-div"}>
+                    <div className={"flex"}>
+                        <label htmlFor={"chapter-mode"}><EditRoundedIcon/></label>
+                    <select
+                        className={"edit-chapter-input"}
+                        id={"chapter-mode"}
+                        value={chapter.mode}
+                        onChange={(event) => {setChapter({...chapter,mode:event.target.value})}}
+                    >
+                        <option value={"Private"}>Private</option>
+                        <option value={"Public"}>Public</option>
+                    </select>
+                    </div>
+                    <a href={"/create/" + storyID}><button className={"edit-chapter-input"}>
+                        GO BACK
+                    </button></a>
+                </div>
+                <div className={"container-div rightAlign"}>
+                    <button className={"edit-chapter-input"} onClick={saveChapter}>
+                        SAVE
+                    </button>
+                    <button className={"edit-chapter-input"} onClick={deleteChapter}>
+                        DELETE
+                    </button>
+                    <button className={"edit-chapter-input"} onClick={()=>{console.log(chapter, chapterText)}}>
+                        LOG
+                    </button>
+                </div>
+            </div>
+        <hr />
+        <div className={"edit-chapter-editor-div"}>
             <div className="control-group">
                 <div className="tiptap-button-list button-list row">
                     <button onClick={() => editor.chain().focus().toggleBold().run()} className={"tiptap-editor-button " + (editor.isActive('bold') ? 'is-active' : '')}>B</button>
                     <button onClick={() => editor.chain().focus().toggleItalic().run()} className={"tiptap-editor-button " + (editor.isActive('italic') ? 'is-active' : '')}>I</button>
                     <button onClick={() => editor.chain().focus().toggleUnderline().run()} className={"tiptap-editor-button " + (editor.isActive('underline') ? 'is-active' : '')}>U</button>
                 </div>
-                <div className={"ttiptap-info-list"}>
-                    {editor.storage.characterCount.words()} words, {editor.storage.characterCount.characters()} characters
+                <div className={"tiptap-info-list"}>
+                    <p>{editor.storage.characterCount.words()} words</p>
+                    <p>{editor.storage.characterCount.characters()} characters</p>
                 </div>
             </div>
-            <EditorContent editor={editor} />
         </div>
-    </>)
+        <div className={"editor-input-div"}>
+            <EditorContent editor={editor} className={"editor-input"}/>
+        </div>
+    </div>)
 }

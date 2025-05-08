@@ -18,9 +18,10 @@ export const SnackbarWrapper = ({ children }) => {
     const [message, setMessage] = useState('');
     const [severity, setSeverity] = useState('info');
 
-    const showSnackbar = (msg, sev = 'info') => {
+    const showSnackbar = (msg, sev = 'info', dur=duration) => {
         setMessage(msg);
         setSeverity(sev);
+        setDuration(dur);
         setOpen(true);
     };
 

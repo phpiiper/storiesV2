@@ -25,9 +25,14 @@ export async function GET(request){
         const storyList = stories.data.data.filter(x => (x.mode === "Private" && session && session.user.id === x.user_id) || x.mode === "Public")
         return new Response(JSON.stringify(storyList), {status: 200});
     }else {
+        let filters = {}
+        query.forEach((value, key) => {
+            filters[key] = value;
+        })
         let stories = []
         stories = await axios.get(`${process.env.BACKEND_URL}/api/v1/stories`,{
-            headers: auth
+            headers: auth,
+            params: filters
         });
 
         if (stories.data.error){

@@ -1,12 +1,12 @@
 'use client'
 import {useEffect, useState} from "react";
-import Chip from '@mui/material/Chip';
-import HomeBar from "../../components/HomeBar";
 import { useRouter } from 'next/navigation'
 import { useParams } from 'next/navigation'
 import LoadingDiv from "@/app/components/LoadingDiv";
 import axios from "axios";
 import ErrorPage from "@/app/components/ErrorPage";
+import dayjs from "dayjs";
+import CheckIcon from '@mui/icons-material/Check';
 
 export default function Story() {
     const router = useRouter();
@@ -44,55 +44,84 @@ export default function Story() {
 
     if (isError){
         return (<>
-            <HomeBar />
             <ErrorPage></ErrorPage>
         </>)
     }
 
     if (isLoading){
         return (<>
-            <HomeBar />
             <LoadingDiv />
         </>)
     }
 
+//    console.log(story)
+
     return (<>
-            <HomeBar />
-            <div id={"content"} className={"story-info-page"}>
-                <span className={"story-author"}>{author.username}</span>
-                <span className={"story-title"}>{story.title}</span>
-                <Chip
-                    label={story.genre}
-                    component={"a"}
-                    href={`/search?genre=${story.genre}`}
-                    clickable
-                />
-                <div className={"story-description"}>
-                    {story.description}
+        <div className={"story-info-page page"}>
+            <a href={"/"} style={{textDecoration: "underline"}}><span>Return</span></a>
+            <div className={"container row"}>
+                <div className={"container-div left"}>
+                    <span className={"story-info-header"}>AUTHOR</span>
+                    <span className={"story-info-value"}>{author.username}</span>
                 </div>
-                <div className={"story-tags"}>
-                    <hr />
-                    <span className={"span-header"}>Tags</span>
-                    <div className={"story-tags-list"}>{story.tags?.map(x => (<Chip
-                        key={story.id + "-" + x}
-                        label={x}
-                        component={"a"}
-                        href={`/search?tag=${x}`}
-                        clickable
-                    />))}</div>
-                </div>
-                <div className={"story-toc"}>
-                    <hr />
-                    <span className={"span-header"}>Table of Contents</span>
-                    <div className={"story-toc-list"}>
-                        {chapters ? (
-                            chapters.map((value, index) => (
-                                    <a key={"ch-"+index+1} href={`/story/${story.id}/${index+1}`}>{value.name}</a>
-                                )
-                            )) : <></>}
-                    </div>
+                <div className={"container-div rightAlign"}>
+                    <h2>{story.title}</h2>
                 </div>
             </div>
-        </>
-    );
+            <div className={"container row"}>
+                <div className={"container-div left"}>
+                </div>
+                <div className={"container-div rightAlign row"} style={{gap: "0.5rem"}}>
+                    <span className={"story-info-header"}>ID</span>
+                    <span className={"story-info-value"}>{story.id.split("-")[0]}...</span>
+                </div>
+            </div>
+            <div className={"container row"}>
+                <div className={"container-div left"}>
+                    TAGS
+                </div>
+                <div className={"container-div rightAlign row"} style={{gap: "0.5rem"}}>
+                    <span className={"story-info-header"}> UPDATED</span>
+                    <span className={"story-info-value"}>{dayjs(story.last_updated).format("MMMM D, YYYY")}</span>
+                </div>
+            </div>
+            <div className={"container row"} style={{marginBottom: "2rem"}}>
+                <div className={"container-div left"}>
+                    {story.tags.map((value, index) => index < 3 ? <div className={"tag-chip"} style={{fontSize: "0.8rem"}} key={`tag-${value}`}>{value} </div> : <></>  )}
+                    {story.tags.length > 3 && <div className={"tag-chip"}>...</div>}
+                </div>
+                <div
+                    className={"container-div rightAlign row"}
+                >
+                    {story.tags.length > 3 && <button
+                        onClick={() =>{
+                            alert("Will be added soon!")
+                        }}
+                    >View Tags</button>}
+                </div>
+            </div>
+            <div className={"story-info-chapters-div"}>
+                <div className={"story-info-chapter"}>
+                    <div className={"id"}>#</div>
+                    <div className={"title"}>Chapter Name</div>
+                    <div className={"read"}>Read</div>
+                </div>
+            </div>
+            <hr style={{width: "100%", margin: "0 0 1rem"}}/>
+            {chapters.map((value, index) => <div
+                className={"story-info-chapters-div"}
+                key={value.id}
+            >
+                <div className={"story-info-chapter"}>
+                    <div className={"id"}>{index+1}</div>
+                    <div className={"title"}>{value.name}</div>
+                    <div className={"read"}><a
+                        href={`/story/${value.story_id}/${index+1}`}
+                        className={"hover-reveal box-icon-button"}
+                    ><button><CheckIcon /></button></a></div>
+                </div>
+            </div>)}
+        </div>
+    </>)
+
 }

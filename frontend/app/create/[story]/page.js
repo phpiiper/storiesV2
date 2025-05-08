@@ -3,20 +3,14 @@ import {useParams, useRouter} from 'next/navigation';
 import {useEffect, useState } from "react";
 import axios from "axios";
 import {useSession} from "next-auth/react";
-import Head from "next/head";
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
-import TextField from "@mui/material/TextField";
-import Button from "@mui/material/Button";
-import Chip from "@mui/material/Chip";
-import Select from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
+import dayjs from 'dayjs'
+
+import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import EditChapter from "../../components/EditChapter";
-import HomeBar from "../../components/HomeBar";
 import LoadingDiv from "@/app/components/LoadingDiv";
 import ErrorPage from "@/app/components/ErrorPage";
 import {useSnackbar} from "@/app/providers/snackbar";
-
+import Confirmation from "@/app/components/Confirmation";
 
 
 export default function StoryEditor() {
@@ -43,6 +37,9 @@ export default function StoryEditor() {
         } catch (e) {
             console.log(`Error: ${e}`)
         }
+    }
+    const parseDate = (date) => {
+        return dayjs(date).format("MMMM D, YYYY |  h:mm:ss a")
     }
     const handleChangeTab = (event, newValue) => {
         setCurrentTab(newValue);
@@ -73,19 +70,23 @@ export default function StoryEditor() {
     const deleteChapter = async (id) => {
         const chapterFileName = chapters.find(x => x.id === id).file;
         const res = await axios.delete(`/api/chapters?storyID=${story.id}&chapterID=${id}&chapterFileName=${chapterFileName}`)
-        if (res.data.status !== 200) {
-            showSnackbar("Error in deleting chapter.")
-            return
+        console.log(res)
+        if (res.data.status >= 300) {
+            showSnackbar("Error in deleting chapter.","error")
+            return false
         }
-        showSnackbar("Chapter deleted successfully!")
+        showSnackbar("Chapter deleted successfully!","success")
         getStory()
+        return true
     }
     const saveStory = async () => {
         const res = await axios.put(`/api/stories`,story)
         if (res.data.status === 200){
             showSnackbar("Story saved successfully!")
+            return true
         } else {
             showSnackbar("Error saving story.")
+            return false
         }
     }
     const addChapter = async () => {
@@ -99,10 +100,12 @@ export default function StoryEditor() {
             formData.append('file', file);
         const res = await axios.post(`/api/chapters`,formData);
         if (res.data){
-            showSnackbar("New chapter added!")
+            showSnackbar("New chapter added!","success")
             getStory()
+            return true
         } else {
             showSnackbar("Error in creating chapter.")
+            return false
         }
     }
 
@@ -113,135 +116,148 @@ export default function StoryEditor() {
 
     if (isLoading){
         return (<>
-            <HomeBar />
             <LoadingDiv />
         </>)
     }
 
     if (status === "unauthenticated" ||isError ||(sessionData && story.user_id !== sessionData.user.id)){
         return (<>
-            <HomeBar />
             <ErrorPage error={404} msg={isError ? "ERROR FETCHING STORY" : "NOT AUTHENTICATED"}></ErrorPage>
         </>)
     }
 
-
-    return (<>
-        <HomeBar />
-        <div className={"story-editor-page"}>
-            <h1 style={{textAlign: "center", margin: "1rem 0"}}>EDIT STORY</h1>
-            <Button
-                variant={"contained"}
-                href={"/create"}
-            >GO BACK</Button>
-            <Tabs value={currentTab} onChange={handleChangeTab} aria-label="basic tabs example">
-                <Tab value={1} label={"Basic Info"} />
-                <Tab value={2} label={"Tags"} />
-                <Tab value={3} label={"Chapters"} />
-            </Tabs>
-            <div
-                className={"tab edit-story-tab"}
-                role={"tabpanel"}  hidden={currentTab !== 1}
-                id={"simple-tabpanel-1"} aria-labelledby={`simple-tab-1`}
-            >
-                <div className={"edit-story-info tab-content"}>
-                    <TextField
-                        id={"story-title"}
-                        label={"Title"}
-                        value={story.title}
-                        onChange={(event) => {handleChangeStory(event,"title")}}
-                        fullWidth
-                    />
-                    <TextField
-                        id={"story-genre"}
-                        label={"Genre"}
-                        value={story.genre}
-                        onChange={(event) => {handleChangeStory(event,"genre")}}
-                        fullWidth
-                    />
-                    <TextField
-                        id={"story-description"}
-                        label={"Description"}
-                        value={story.description}
-                        onChange={(event) => {handleChangeStory(event,"description")}}
-                        multiline
-                        fullWidth
-                        minRows={4}
-                        maxRows={8}
-                    />
-                    <Select
-                        id={"story-mode"}
-                        label={"Mode"}
-                        value={story.mode}
-                        onChange={(event) => {handleChangeStory(event,"mode")}}
-                    >
-                        <MenuItem value={"Private"}>Private</MenuItem>
-                        <MenuItem value={"Public"}>Public</MenuItem>
-                    </Select>
-                </div>
+    return (<div className={"page story-editor-page"}>
+        <div className={"flex"}>
+            <label htmlFor={"story-title"}><EditRoundedIcon /></label>
+            <input
+                className={"edit-story-input"}
+                id={"story-title"}
+                value={story.title}
+                onChange={(event) => {handleChangeStory(event,"title")}}
+                placeholder={"Story Title"}
+            />
+        </div>
+        <div className={"container row"}>
+            <div className={"container-div flex row"}>
+                <label htmlFor={"story-genre"}><EditRoundedIcon /></label>
+                <input
+                    className={"edit-story-input"}
+                    id={"story-genre"}
+                    value={story.genre}
+                    onChange={(event) => {handleChangeStory(event,"genre")}}
+                    placeholder={"Genre"}
+                />
             </div>
-            <div
-                className={"tab edit-story-tab"}
-                role={"tabpanel"}  hidden={currentTab !== 2}
-                id={"simple-tabpanel-2"} aria-labelledby={`simple-tab-2`}
-            >
-                <div className={"tab-content"}>
-                    <div className={"flex"} style={{margin: "1rem 0"}}>
-                        <TextField
-                            id={"story-tags-add"}
-                            label={"Add Tag"}
-                            onKeyDown={(event) => {
-                                if (event.key === "Enter") {
-                                    addStoryTag(event);
-                                }}}
-                            fullWidth
-                        />
-                        <Button
-                            variant={"contained"}
-                            onClick={addStoryTag}
-                        >ADD</Button>
-                    </div>
-                    <p>Add tags to better define the story. Only alphabetical characters and hyphens are allowed.</p>
-                    <span className={"text-header"}>Tag List</span>
-                    <div className={"tags-list"}>
-                        {story.tags ? story.tags.map(x =>
-                            <Chip
-                                key={`tag-${x}`}
-                                label={x}
-                                onDelete={() => {deleteStoryTag(x)}}
-                            />
-                        ) : <></>}
-                    </div>
-                </div>
-                </div>
-            <div
-                className={"tab edit-story-tab"}
-                role={"tabpanel"}  hidden={currentTab !== 3}
-                id={"simple-tabpanel-3"} aria-labelledby={`simple-tab-3`}
-            >
-                <div className={"tab-content"}>
-                    <Button
-                        variant={"contained"}
-                        fullWidth
-                        onClick={addChapter}>Add Chapter</Button>
-                    <div className={"chapters-list"}>
-                        {chapters ? chapters.map((value, index) => (
-                            <EditChapter key={`chapter-${index}`} chapters={chapters} setChapters={setChapters} chapterID={value.id} funcs={{
-                                deleteChapter: deleteChapter
-                            }}/>
-                        )) : <></>}
-                    </div>
-
-                </div>
+            <div className={"container-div flex"} style={{alignItems: "flex-end", display: "flex"}}>
+                <button>SAVE</button>
+            </div>
         </div>
-            {currentTab !== 3 && <div className={"edit-story-footer"}>
-                <Button
-                    variant={"contained"}
-                    onClick={saveStory}>SAVE
-                </Button>
-                <p>Changes will not save unless you press SAVE</p>
-            </div>}
-
+        <div className={"container row"}>
+            <div className={"container-div flex row"} >
+                <label htmlFor={"story-mode"}><EditRoundedIcon /></label>
+                <select
+                    className={"edit-chapter-input"}
+                    id={"story-mode"}
+                    value={story.mode}
+                    onChange={(event) => {setStory({...story,mode:event.target.value})}}
+                >
+                    <option value={"Private"}>Private</option>
+                    <option value={"Public"}>Public</option>
+                </select>
+            </div>
+            <div className={"container-div flex row"} style={{display: "flex", justifyContent: "flex-end"}}>
+                <a href={"/create"}><button>GO BACK</button></a>
+            </div>
         </div>
-    </>)
+        <hr style={{width: "100%", margin: "0.5rem 0"}}/>
+        <div className={"flex"} style={{gap: "1rem", fontSize: "0.75rem"}}>
+            <div className={"container-div flex row"} >
+                <span>LAST UPDATED</span>
+            </div>
+            <div className={"container-div flex row"} style={{display: "flex", justifyContent: "flex-end"}}>
+                <span>{parseDate(story.last_updated)}</span>
+            </div>
+        </div>
+        <div className={"flex"} style={{gap: "1rem", fontSize: "0.75rem"}}>
+            <div className={"container-div flex row"} >
+                <span>CREATE DATE</span>
+            </div>
+            <div className={"container-div flex row"} style={{display: "flex", justifyContent: "flex-end"}}>
+                <span>{parseDate(story.create_date)}</span>
+            </div>
+        </div>
+        <div style={{margin: "1rem 0"}} />
+        <div className={"edit-story-tab-div"}>
+            <div className={"edit-story-info tab-content"}>
+                <span className={"span-header"} style={{fontSize: "1.25rem", justifyContent: "left", margin:"0", gap:"0.25rem" }}>Description</span>
+                <textarea
+                    id={"story-description"}
+                    value={story.description}
+                    onChange={(event) => {handleChangeStory(event,"description")}}
+                    placeholder={"Description"}
+                />
+            </div>
+        </div>
+        <div className={"flex"} style={{gap: "1rem", fontSize: "0.75rem"}}>
+            <div className={"container-div flex row"} >
+                <span className={"span-header"} style={{fontSize: "1.25rem", justifyContent: "left", margin:"0", gap:"0.25rem" }}>Tags</span>
+            </div>
+            <div className={"container-div flex row"} style={{display: "flex", justifyContent: "flex-end"}}>
+                <input
+                    className={"edit-chapter-input edit-story-tags-input"}
+                    placeholder={"Add Tag + (Enter)"}
+                    onKeyUp={(event)=>{if (event.key === "Enter") {addStoryTag()}}}
+                    id={"story-tags-add"}
+                    style={{textAlign: "right"}}
+                />
+            </div>
+        </div>
+        <div className={"story-tags-container"} style={{marginBottom: "2rem"}}>
+            {story.tags && story.tags.map((value, index) => <a
+                    key={`tag-${value}`}
+                    onClick={() => {deleteStoryTag(value)}}
+                >{`${value}`}</a>
+            )}
+        </div>
+        <div className={"flex"} style={{gap: "1rem", fontSize: "0.75rem"}}>
+            <div className={"container-div flex row"} >
+                <span className={"span-header"} style={{fontSize: "1.25rem", justifyContent: "left", margin:"0", gap:"0.25rem" }}>Chapters</span>
+            </div>
+            <div className={"container-div flex row"} style={{display: "flex", justifyContent: "flex-end"}}>
+                <Confirmation
+                    text={"Are you sure you want to add a chapter?"}
+                    onConfirm={addChapter}
+                >
+                    <a><button>Add Chapter</button></a>
+                </Confirmation>
+            </div>
+        </div>
+        <div className={"edit-story-info tab-content"}>
+            <div className={"chapters-list"}>
+                <div className={"edit-chapter-div"}>
+                    <a>#</a>
+                    <a>Chapter Name</a>
+                    <div
+                        className={"button-list row"}
+                        style={{marginLeft: "auto"}}
+                    >
+                        <a className={"box-icon-header-a"}>C1</a>
+                        <a className={"box-icon-header-a"}>C2</a>
+                        <a className={"box-icon-header-a"}>C3</a>
+                        <a className={"box-icon-header-a"}>C4</a>
+                    </div>
+                </div>
+                <hr />
+                {chapters ? chapters.map((value, index) => (
+                    <EditChapter key={`chapter-${index}`} chapters={chapters} setChapters={setChapters} chapterID={value.id} funcs={{
+                        deleteChapter: deleteChapter
+                    }}/>
+                )) : <></>}
+            </div>
+        </div>
+
+
+    </div>)
+
+
 }

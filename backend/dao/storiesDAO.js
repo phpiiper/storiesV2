@@ -9,7 +9,7 @@ export default class StoriesDAO {
             const userFilter = `%${user}%`;
             const genreFilter = `%${genre}%`;
 
-            const stories = await query(`SELECT * FROM stories WHERE title ILIKE $1 AND user ILIKE $2 AND genre ILIKE $3`, [titleFilter, userFilter, genreFilter]
+            const stories = await query(`SELECT stories.*,users.username FROM stories LEFT JOIN users ON stories.user_id = users.id WHERE title ILIKE $1 AND username ILIKE $2 AND genre ILIKE $3`, [titleFilter, userFilter, genreFilter]
             );
 
 

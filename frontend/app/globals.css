@@ -439,13 +439,19 @@ span.text-header {
   display: flex; flex-direction: column;
   gap: 1rem;
 }
-.story-page-filter-list input {
+.story-page-filter-list input, .underline-input {
   border: none; outline: none;
   border-bottom: 1px solid black; padding-bottom: 4px;
   text-align: right;
   width: fit-content;
 }
 
+.home-page form, .home-page .form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: flex-end;
+}
 
 
 /* CREATE PAGE --- /create */

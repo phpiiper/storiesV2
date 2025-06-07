@@ -5,26 +5,25 @@ const auth = { Authorization: `Bearer ${process.env.AUTH_TOKEN}` };
 export async function POST(request) {
     try {
         const body = await request.json();
+        let messages = ""
 
         if (!body.username || body.username.length < 5) {
-            return new Response(JSON.stringify({
-                message: "Username must be longer than 5 characters!"
-            }), { status: 400 });
+            messages += "Username must be longer than 5 characters! "
         }
-
         if (!body.password || body.password.length < 5) {
-            return new Response(JSON.stringify({
-                message: "Password must be longer than 5 characters!"
-            }), { status: 400 });
+            messages += "Password must be longer than 5 characters! "
         }
-
         const users = await axios.get(`${process.env.BACKEND_URL}/api/v1/users`, { headers: auth });
         const user_exists = users.data.find(user => user.username === body.username);
 
         if (user_exists) {
-            return new Response(JSON.stringify({
-                message: "Username is taken!"
-            }), { status: 400 });
+            if (!body.password || body.password.length < 5) {
+                messages = "Username is taken!"
+            }
+        }
+
+        if (messages.length > 0){
+            return new Response(JSON.stringify({ message: messages }), { status: 400 });
         }
 
         // Create user

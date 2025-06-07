@@ -4,7 +4,7 @@ import { useState, useEffect  } from "react";
 import Head from "next/head";
 import HomeBar from "./components/HomeBar";
 import Stories from "./components/Stories";
-import {useSession} from "next-auth/react";
+import {useSession, signIn, signOut} from "next-auth/react";
 import axios from "axios";
 import LoadingDiv from "@/app/components/LoadingDiv";
 import ErrorPage from "@/app/components/ErrorPage";
@@ -18,6 +18,8 @@ export default function Home({}) {
   const [stories, setStories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
+  const [signInError, setSignInError] = useState(false);
+  const [signInErrorMsg, setSignInErrorMsg] = useState("Standard Error Message");
   const [filters, setFilters] = useState({
     title: "", genre: "", author: "", tags: []
   })
@@ -155,9 +157,89 @@ export default function Home({}) {
         </div>
       </div>
       <hr style={{width: "100%", margin: "1rem 0"}}/>
+      {status !== "authenticated" && <div className={"container row"} >
+        <div className={"container row"} style={{alignItems: "baseline"}}>
+          <div className={"container-div left"} style={{fontWeight: 500 }}>
+            USER
+          </div>
+          <div className={"container-div rightAlign flex"} style={{
+            gap: "1rem", padding: "0.5rem"
+          }}>
+            <div style={{display: "flex", gap: "0.5rem"}}>
+              <div className={"form"}>
+                <span>Username </span>
+                <input type={"username"} id={"username-input"} className={"underline-input"} placeholder="Username"/>
+                <span>Password </span>
+                <input type={"password"} id={"password-input"} className={"underline-input"} placeholder="Password"/>
+                <div className={"flex row"} style={{display: signInError ? "flex" : "none"}}>
+                  {signInError ? signInErrorMsg : ""}
+                </div>
+                <div className={"flex row"}>
+                  <button onClick={async () => {
+                      let us = document.getElementById("username-input").value
+                      let pw = document.getElementById("password-input").value
+                      try {
+                        let res = await axios.post(`/api/user`, {
+                          username: us, password: pw
+                        })
+                        console.log("Account created!")
+                        signIn("credentials", {
+                          user: us, password: pw, redirect: false
+                        })
+                        setSignInError(false)
+                      } catch (e) {
+                        setSignInErrorMsg(e.response.data.message)
+                        setSignInError(true)
+                      }
+                    }
+                  }>Sign Up</button>
+                  <button onClick={async () => {
+                    let us = document.getElementById("username-input").value
+                    let pw = document.getElementById("password-input").value
+                    let res = await signIn("credentials", {
+                      user: us, password: pw, redirect: false
+                    } );
+                    if (res.error){
+                      let message = res.error
+                      console.log(message)
+                    }
+                    setSignInError(false)
+                  }}>Login</button>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      }
+      {status === "authenticated" && <div className={"container row"} >
+        <div className={"container row"} style={{alignItems: "baseline"}}>
+          <div className={"container-div left"} style={{fontWeight: 500 }}>
+            USER
+          </div>
+          <div className={"container-div rightAlign flex"} style={{
+            gap: "1rem", padding: "0.5rem"
+          }}>
+            <div style={{display: "flex", flexDirection: "column", gap: "0.5rem"}}>
+              <a href={"/create"}>Create </a>
+              <a href={"/library"}>Library </a>
+              <a href={"/profile"}>Profile </a>
+              <a href={"/search"}>Search </a>
+            </div>
+            <div style={{display: "flex", gap: "0.5rem"}}>
+              <button onClick={() => {signOut({redirect: false})}}>Sign Out</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      }
+      <hr style={{width: "100%", margin: "1rem 0"}}/>
       <div className={"footer-div"}>
-        <p style={{textAlign: "center", fontSize: "0.8rem"}}>Made with NextJS/React (Vercel) + NodeJS (Render) + PostgreSQL (Supabase)</p>
-        <a style={{textAlign: "center", fontSize: "0.75rem", width: "fit-content"}} href={"https://github.com/phpiiper/storiesV2"} target={"_blank"}>View Github</a>
+        <p style={{textAlign: "center", fontSize: "0.8rem"}}>Made with NextJS/React (Vercel) + NodeJS (Render) +
+          PostgreSQL (Supabase)</p>
+        <a style={{textAlign: "center", fontSize: "0.75rem", width: "fit-content"}}
+           href={"https://github.com/phpiiper/storiesV2"} target={"_blank"}>View Github</a>
       </div>
     </div>
   </>)

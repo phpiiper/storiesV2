@@ -237,7 +237,7 @@ export default function Home({}) {
       <hr style={{width: "100%", margin: "1rem 0"}}/>
       <div className={"footer-div"}>
         <p style={{textAlign: "center", fontSize: "0.8rem"}}>Made with NextJS/React (Vercel) + NodeJS (Render) +
-          PostgreSQL (Supabase)</p>
+          PostgreSQL</p>
         <a style={{textAlign: "center", fontSize: "0.75rem", width: "fit-content"}}
            href={"https://github.com/phpiiper/storiesV2"} target={"_blank"}>View Github</a>
       </div>
